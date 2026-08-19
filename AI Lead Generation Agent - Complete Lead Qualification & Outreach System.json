@@ -1,0 +1,1048 @@
+{
+  "name": "AI Lead Generation Agent - Complete Lead Qualification & Outreach System",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0f7a395a-bd3e-4626-940c-a23166489715",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3280,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const leads = [\n  {\n    lead_name: \"Ananya Sharma\",\n    email: \"ananya.sharma@brightsoft.io\",\n    phone: \"9876543210\",\n    job_title: \"VP of Sales\",\n    company: \"BrightSoft Technologies\",\n    industry: \"SaaS\",\n    company_size: \"150-300\",\n    location: \"Bengaluru, India\",\n    website: \"https://brightsoft.io\",\n    pain_point: \"Manual lead qualification is slowing down the sales team\",\n    buying_signal: \"Requested a demo after reading our automation blog post\",\n    source: \"Website Form\"\n  },\n  {\n    lead_name: \"Rohan Mehta\",\n    email: \"rohan.mehta@greenfields-agro.com\",\n    phone: \"9123456780\",\n    job_title: \"Operations Manager\",\n    company: \"Greenfields Agro\",\n    industry: \"Agriculture\",\n    company_size: \"20-50\",\n    location: \"Nagpur, India\",\n    website: \"https://greenfields-agro.com\",\n    pain_point: \"Unknown\",\n    buying_signal: \"Downloaded a general industry report\",\n    source: \"LinkedIn\"\n  },\n  {\n    lead_name: \"Kabir Singh\",\n    email: \"kabir.singh@quickmart.in\",\n    phone: \"9988776655\",\n    job_title: \"Cashier\",\n    company: \"QuickMart\",\n    industry: \"Retail\",\n    company_size: \"5-10\",\n    location: \"Muzaffarnagar, India\",\n    website: \"Unknown\",\n    pain_point: \"None mentioned\",\n    buying_signal: \"None\",\n    source: \"Cold List\"\n  },\n  {\n    lead_name: \"Priya Nair\",\n    email: \"priya.nair@finedge.com\",\n    phone: \"Unknown\",\n    job_title: \"Unknown\",\n    company: \"FinEdge Capital\",\n    industry: \"Financial Services\",\n    company_size: \"Unknown\",\n    location: \"Unknown\",\n    website: \"https://finedge.com\",\n    pain_point: \"Unknown\",\n    buying_signal: \"Unknown\",\n    source: \"Referral\"\n  },\n  {\n    lead_name: \"David Chen\",\n    email: \"david.chen@nexawave.io\",\n    phone: \"6598765432\",\n    job_title: \"Head of Growth\",\n    company: \"NexaWave\",\n    industry: \"SaaS\",\n    company_size: \"50-150\",\n    location: \"Singapore\",\n    website: \"https://nexawave.io\",\n    pain_point: \"Losing qualified leads because outreach takes too long to personalize\",\n    buying_signal: \"Replied to cold email asking for pricing and a live demo this week\",\n    source: \"Outbound Campaign\"\n  }\n];\nreturn leads.map(l => ({ json: l }));"
+      },
+      "id": "a5b48eaf-1b3a-4800-a062-9f4137f68371",
+      "name": "Sample Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3056,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $json;\nconst requiredStrings = [\"lead_name\",\"email\",\"phone\",\"job_title\",\"company\",\"industry\",\n  \"company_size\",\"location\",\"website\",\"pain_point\",\"buying_signal\",\"source\"];\n\nconst clean = {};\nfor (const key of requiredStrings) {\n  let v = item[key];\n  if (v === undefined || v === null || String(v).trim() === \"\") {\n    v = \"Unknown\";\n  } else {\n    v = String(v).trim();\n  }\n  clean[key] = v;\n}\n\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nclean.email_valid = emailRegex.test(clean.email) ? true : false;\nclean.name_valid = clean.lead_name !== \"Unknown\";\nclean.company_valid = clean.company !== \"Unknown\";\nclean.is_valid_lead = clean.email_valid && clean.name_valid && clean.company_valid;\nclean.status = \"New\";\nclean.received_at = new Date().toISOString();\n\nconst base = 15;\nclean.lead_id = \"L\" + String(base + $itemIndex + 1).padStart(3, \"0\");\n\nreturn { json: clean };"
+      },
+      "id": "13d90c19-687c-4d51-a869-6b650d9d2813",
+      "name": "Normalize & Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2832,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Ch0IYVJsKm1IhKetdY22JOrtO6UvPe1QJszZxBCGMbA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ch0IYVJsKm1IhKetdY22JOrtO6UvPe1QJszZxBCGMbA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead Id": "={{ $json.lead_id }}",
+            "Name": "={{ $json.lead_name }}",
+            "Company": "={{ $json.company }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "Source": "={{ $json.source }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Lead Id",
+              "displayName": "Lead Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Source",
+              "displayName": "Lead Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Contact",
+              "displayName": "Last Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Next Follow Up",
+              "displayName": "Next Follow Up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d160cfea-2349-4abe-982e-35a57e21dd6c",
+      "name": "Store Lead (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2624,
+        80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WVA8zWBhhMBTE7QF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "033cdc4d-4629-498e-8357-ac45a36bcac3",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2384,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "id": "86ce6fb1-1365-44f6-b052-af4406975ac4",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        304
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "aRk5KxALnIAfy7s0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"lead_name\": \"string\",\n  \"company\": \"string\",\n  \"job_title\": \"string\",\n  \"qualification\": \"qualified\",\n  \"lead_score\": 0,\n  \"reason\": \"string\",\n  \"pain_point\": \"string\",\n  \"buying_signal\": \"string\",\n  \"personalization\": \"string\",\n  \"recommended_action\": \"outreach\",\n  \"email_subject\": \"string\",\n  \"email_body\": \"string\"\n}"
+      },
+      "id": "112ca8a0-16d1-4935-a408-14f9ae2951b2",
+      "name": "Qualification Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2000,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an intelligent AI Lead Qualification and Sales Support Agent.\n\nAnalyze this lead:\nName: {{ $('Loop Over Items').item.json.lead_name }}\nJob title: {{ $('Loop Over Items').item.json.job_title }}\nCompany: {{ $('Loop Over Items').item.json.company }}\nIndustry: {{ $('Loop Over Items').item.json.industry }}\nCompany size: {{ $('Loop Over Items').item.json.company_size }}\nLocation: {{ $('Loop Over Items').item.json.location }}\nWebsite: {{ $('Loop Over Items').item.json.website }}\nEmail: {{ $('Loop Over Items').item.json.email }}\nPhone: {{ $('Loop Over Items').item.json.phone }}\nSource: {{ $('Loop Over Items').item.json.source }}\nPain point: {{ $('Loop Over Items').item.json.pain_point }}\nBuying signal: {{ $('Loop Over Items').item.json.buying_signal }}\n\nRules:\n1. Determine whether the lead is Qualified or Not Qualified.\n2. Score the lead from 0 to 100.\n3. Consider: job/title relevance, company fit, industry fit, potential business need, buying intent/signals, data completeness.\n4. Give a short, clear reason for the qualification decision.\n5. Never invent missing company, personal, contact, buying-signal, or business information. Use \"Unknown\" for anything not provided.\n6. For qualified leads only, write a concise personalization summary usable for outreach.\n7. Generate a professional outreach email subject and body using only available information. No unsupported claims.\n8. Do not send anything yourself — only draft it.\n9. If not qualified, recommended_action must be \"nurture\" or \"archive\". If qualified, recommended_action must be \"outreach\".\n\nReturn ONLY the structured JSON object requested.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a precise, factual B2B lead qualification analyst. Never fabricate data."
+        }
+      },
+      "id": "67a74068-249a-411d-847a-ce2fd51d5157",
+      "name": "AI Lead Qualification",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -2128,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.output.qualification }}",
+              "rightValue": "qualified",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "176eee27-6b28-476d-b62a-3fc5c786ff31",
+      "name": "IF Qualified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ai = $json.output;\nreturn [{ json: { ...ai, status: ai.recommended_action === 'nurture' ? 'nurture' : 'archived', final_status: ai.recommended_action === 'nurture' ? 'nurture' : 'archived' } }];"
+      },
+      "id": "cd7cb52c-2d48-46df-90d8-1e8fbf313945",
+      "name": "Archive / Nurture",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ai = $json.output;\nconst enriched = {\n  ...ai,\n  enrichment_notes: ai.buying_signal !== 'Unknown'\n    ? 'Buying signal on file: ' + ai.buying_signal\n    : 'No explicit buying signal on file',\n  status: 'qualified'\n};\nreturn [{ json: enriched }];"
+      },
+      "id": "7d61517c-dc90-42e9-bf0c-05c9a05838cf",
+      "name": "Lead Enrichment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "id": "13df13b6-2119-4eec-9ad5-4d6a6b1c142b",
+      "name": "Human Approval (Wait)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1440,
+        -16
+      ],
+      "webhookId": "2746fcde-a2f4-4643-8d10-fb3cbdceced1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body?.approved }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2e23a408-122c-4e8b-a0d5-b14a474f97b4",
+      "name": "IF Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "status",
+              "value": "rejected_by_approver",
+              "type": "string"
+            },
+            {
+              "name": "final_status",
+              "value": "rejected",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6deb3b13-d106-44a1-8552-fa8d71494d52",
+      "name": "Rejected - Stop",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -992,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Lead Enrichment').item.json.email }}",
+        "subject": "={{ $('Lead Enrichment').item.json.email_subject }}",
+        "message": "={{ $('Lead Enrichment').item.json.email_body }}",
+        "options": {}
+      },
+      "id": "fbe43ec6-a5e0-403a-b607-38ef6124c3cc",
+      "name": "Send Outreach",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -992,
+        -96
+      ],
+      "webhookId": "e42e1321-0569-4e37-a0ad-e7976390f145"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "id": "70b496a0-88b2-4580-8beb-6cade8bd58be",
+      "name": "Wait for Response",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        -96
+      ],
+      "webhookId": "b3679522-9f08-4cba-9a26-a7c1a9681ac0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body?.response_text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f75574ee-524f-450a-8e0a-17f3a459ffd0",
+      "name": "IF Response Received?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Lead Enrichment').item.json.email }}",
+        "subject": "Following up: {{ $('Lead Enrichment').item.json.email_subject }}",
+        "message": "Hi {{ $('Lead Enrichment').item.json.lead_name }}, just following up on my previous note in case it got buried. Happy to share more details whenever it's useful.",
+        "options": {}
+      },
+      "id": "13b27b80-f0ed-4a20-9331-f3c5eb87974e",
+      "name": "Follow-up #1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -224
+      ],
+      "webhookId": "fa2cec7e-8884-4776-9aab-423d8f1c5cec"
+    },
+    {
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      },
+      "id": "c9ed1218-e697-4119-8903-398376b1f157",
+      "name": "Wait Before Follow-up 2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        -224
+      ],
+      "webhookId": "0e00cb86-24c9-47c1-aff4-d9d513446d0c"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Lead Enrichment').item.json.email }}",
+        "subject": "Last check-in: {{ $('Lead Enrichment').item.json.email_subject }}",
+        "message": "Hi {{ $('Lead Enrichment').item.json.lead_name }}, one last check-in — if now isn't the right time, no worries at all. I'll follow up again in the future.",
+        "options": {}
+      },
+      "id": "e21816e0-1f76-4a93-9b15-3a9e519b8566",
+      "name": "Follow-up #2",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        -224
+      ],
+      "webhookId": "c6f8c6f0-4abe-407b-8940-6813c136b2f8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "status",
+              "value": "cold_no_response",
+              "type": "string"
+            },
+            {
+              "name": "final_status",
+              "value": "nurture",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9ed62759-ab1d-4a5e-be6c-2c855e569705",
+      "name": "Mark Cold / Nurture",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "id": "5d513c12-b77d-4230-aa26-dccb1490de09",
+      "name": "Groq Chat Model (Response)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        144
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "aRk5KxALnIAfy7s0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"classification\": \"interested\",\n  \"summary\": \"string\",\n  \"next_action\": \"sales_handoff\"\n}"
+      },
+      "id": "ef0b3951-cd43-43ac-9b4f-166c75d6ae75",
+      "name": "Response Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI Response Analysis Agent for a sales outreach workflow.\n\nLead: {{ JSON.stringify($json.lead_name) }} at {{ JSON.stringify($json.company) }}\nReply text received: {{ JSON.stringify($json.response_text) }}\n\nClassify the reply as one of: interested, not_interested, no_response.\n- interested -> next_action = \"sales_handoff\"\n- not_interested -> next_action = \"nurture_close\"\n- if the reply text is empty/unclear -> classification = \"no_response\", next_action = \"follow_up\"\n\nWrite a one-sentence summary of the reply. Return ONLY the structured JSON object requested.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You classify inbound sales-lead replies accurately and concisely."
+        }
+      },
+      "id": "96516080-322c-43c3-bab3-cda9379b0820",
+      "name": "AI Response Analysis",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -336,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.output.classification }}",
+              "rightValue": "interested",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f01ed915-b533-4f20-89ec-2a02bd503741",
+      "name": "IF Interested?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "status",
+              "value": "sales_handoff",
+              "type": "string"
+            },
+            {
+              "name": "final_status",
+              "value": "sales_handoff",
+              "type": "string"
+            },
+            {
+              "name": "lead_name",
+              "value": "={{ $('Lead Enrichment').item.json.lead_name }}",
+              "type": "string"
+            },
+            {
+              "name": "company",
+              "value": "={{ $('Lead Enrichment').item.json.company }}",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "value": "={{ $('Lead Enrichment').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "name": "lead_score",
+              "value": "={{ $('Lead Enrichment').item.json.lead_score }}",
+              "type": "number"
+            },
+            {
+              "name": "reply_summary",
+              "value": "={{ $json.output.summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bceeb3c6-c68f-49ec-8e26-ef165a2e1b54",
+      "name": "Sales Handoff",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "status",
+              "value": "not_interested",
+              "type": "string"
+            },
+            {
+              "name": "final_status",
+              "value": "nurture_close",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5e74db1-138d-4c7a-bd45-c1810806231d",
+      "name": "Nurture / Close",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        0
+      ],
+      "id": "5b6517ca-4947-479f-9eaf-9bb5f9f6ad2d",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sample Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Leads": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Validate": {
+      "main": [
+        [
+          {
+            "node": "Store Lead (Google Sheets)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Qualification": {
+      "main": [
+        [
+          {
+            "node": "IF Qualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Qualified?": {
+      "main": [
+        [
+          {
+            "node": "Lead Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Archive / Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive / Nurture": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Enrichment": {
+      "main": [
+        [
+          {
+            "node": "Human Approval (Wait)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Approval (Wait)": {
+      "main": [
+        [
+          {
+            "node": "IF Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Approved?": {
+      "main": [
+        [
+          {
+            "node": "Send Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rejected - Stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rejected - Stop": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Outreach": {
+      "main": [
+        [
+          {
+            "node": "Wait for Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Response": {
+      "main": [
+        [
+          {
+            "node": "IF Response Received?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Response Received?": {
+      "main": [
+        [
+          {
+            "node": "AI Response Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Follow-up #1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Follow-up #1": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Follow-up 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Follow-up 2": {
+      "main": [
+        [
+          {
+            "node": "Follow-up #2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Follow-up #2": {
+      "main": [
+        [
+          {
+            "node": "Mark Cold / Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Cold / Nurture": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Response Analysis": {
+      "main": [
+        [
+          {
+            "node": "IF Interested?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Interested?": {
+      "main": [
+        [
+          {
+            "node": "Sales Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nurture / Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Handoff": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nurture / Close": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualification Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model (Response)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Response Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Response Analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "dad94209-a186-45ae-a1f7-eab74e4f8304",
+  "meta": {
+    "instanceId": "05b0e7817649a01580caabe314915d4f926e6046c0177663e12b4ecc89928841"
+  },
+  "nodeGroups": [],
+  "id": "RGIRQOs9BZ84XrxP",
+  "tags": []
+}
